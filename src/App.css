@@ -1,0 +1,50 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card {
+  padding: 2em;
+  margin: 10px;
+  display: inline;
+}
+
+button:hover,
+h1:hover,
+h2:hover {
+  background-color: yellow;
+  color: black;
+}
+
+button {
+  cursor: pointer;
+}
+
+body {
+  background-image: url("/otter 5o.svg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: beige;
+  color: black;
+  display: flex;
+  margin: 0;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  padding: 0 50px;
+  font-family: Arial;
+}
+
+div {
+  margin: 2px;
+}
+
+video {
+  max-width: calc(50% - 100px);
+  margin: 20px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  padding: 0;
+}
