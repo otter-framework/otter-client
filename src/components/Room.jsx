@@ -15,6 +15,8 @@ const Room = () => {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [mic, setMic] = useState(true);
+  const [vid, setVid] = useState(true);
   //   const location = useLocation();
   //   const roomId = location.search.split("=")[1];
   //   const { current: pc } = useRef(new WebRTCService(roomId));
@@ -37,6 +39,7 @@ const Room = () => {
       localStream.getAudioTracks().forEach((track) => {
         track.enabled = !track.enabled;
       });
+    setMic(!mic);
   };
 
   const toggleMuteVideo = () => {
@@ -44,6 +47,7 @@ const Room = () => {
       localStream.getVideoTracks().forEach((track) => {
         track.enabled = !track.enabled;
       });
+    setVid(!vid);
   };
 
   const handleJoinOrCreateRoom = async () => {
@@ -86,8 +90,10 @@ const Room = () => {
       ) : (
         <>
           <h2>{"Room: " + roomId}</h2>
-          <div>
+          <div id="videos">
             <video
+              className="video-player"
+              id="local"
               autoPlay
               playsInline
               ref={(video) => {
@@ -96,22 +102,48 @@ const Room = () => {
                 }
               }}
             />
-            <span>
-              <button onClick={toggleMuteAudio}>Toggle Mute Audio</button>
-              <button onClick={toggleMuteVideo}>Toggle Mute Video</button>
-            </span>
+            <video
+              className="video-player"
+              id="remote"
+              autoPlay
+              // muted
+              playsInline
+              ref={(video) => {
+                if (video) {
+                  video.srcObject = remoteStream;
+                }
+              }}
+            />
           </div>
 
-          <video
-            autoPlay
-            // muted
-            playsInline
-            ref={(video) => {
-              if (video) {
-                video.srcObject = remoteStream;
-              }
-            }}
-          />
+          <div id="controls">
+            <div
+              className="control-container"
+              id="camera-btn"
+              onClick={toggleMuteVideo}
+            >
+              <img
+                src={
+                  vid
+                    ? "https://super.so/icon/dark/video.svg"
+                    : "https://super.so/icon/dark/video-off.svg"
+                }
+              />
+            </div>
+            <div
+              className="control-container"
+              id="audio-btn"
+              onClick={toggleMuteAudio}
+            >
+              <img
+                src={
+                  mic
+                    ? "https://super.so/icon/dark/volume-x.svg"
+                    : "https://super.so/icon/dark/volume-2.svg"
+                }
+              />
+            </div>
+          </div>
           {/* <ScreenShare pc={pc} mediaService={mediaService} /> */}
         </>
       )}

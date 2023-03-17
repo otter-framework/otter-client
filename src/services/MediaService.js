@@ -3,8 +3,8 @@ class MediaService {
     try {
       const local = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { min: 640, ideal: 1920 },
+          height: { min: 480, ideal: 1080 },
           frameRate: { ideal: 24 },
         },
         audio: {
