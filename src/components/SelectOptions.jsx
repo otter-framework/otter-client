@@ -7,7 +7,7 @@ const SelectOptions = ({
 }) => {
   const toOptions = (mediaDevice) => {
     return (
-      <option key={mediaDevice.deviceId} value={mediaDevice.deviceId}>
+      <option key={mediaDevice.deviceId} value={mediaDevice.label}>
         {mediaDevice.label}
       </option>
     );
@@ -16,7 +16,7 @@ const SelectOptions = ({
   const handleSelectedMediaDevicesChange = (e) => {
     const selectedMediaDevice = {
       kind: e.target.id,
-      deviceId: e.target.value,
+      label: e.target.value,
     };
     onChange(selectedMediaDevice);
   };

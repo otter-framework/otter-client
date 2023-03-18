@@ -5,14 +5,13 @@ class MediaDevice {
     this.audioInputDevices = [];
     this.audioOutputDevices = [];
     this.videoInputDevices = [];
-    this.selectedAudioInputDevice = null;
     this.selectedAudioOutputDevice = null;
     this.selectedVideoInputDevice = null;
     this.updateState = null;
     this.setEventHandlers();
   }
 
-  async startMediaStream() {
+  async getUserMedia() {
     // Need to handle error if user denies permission
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -40,8 +39,6 @@ class MediaDevice {
       video: {
         deviceId: this.selectedVideoInputDevice?.deviceId,
         width: { min: 1280, ideal: 1920, max: 1920 },
-        // width: 1920,
-        // height: 1080,
         height: { min: 720, ideal: 1080, max: 1080 },
         aspectRatio: 1.777777778,
       },
@@ -56,7 +53,14 @@ class MediaDevice {
   }
 
   setEventHandlers() {
-    navigator.mediaDevices.ondevicechange = this.getAllMediaDevices.bind(this);
+    navigator.mediaDevices.ondevicechange = this.handleDeviceChange.bind(this);
+  }
+
+  async handleDeviceChange() {
+    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+    this.updateMediaDevices(mediaDevices);
+    this.setDefaultMediaDevices();
+    this.setState();
   }
 
   updateMediaDevices(mediaDevices) {
@@ -98,41 +102,40 @@ class MediaDevice {
     switch (kind) {
       case "audio-input":
         return this.audioInputDevices.some(
-          (device) => device === this.selectedAudioInputDevice
+          (device) => device.label === this.selectedAudioInputDevice?.label
         );
       case "audio-output":
         return this.audioOutputDevices.some(
-          (device) => device === this.selectedAudioOutputDevice
+          (device) => device.label === this.selectedAudioOutputDevice?.label
         );
-
       case "video-input":
         return this.videoInputDevices.some(
-          (device) => device === this.selectedVideoInputDevice
+          (device) => device.label === this.selectedVideoInputDevice?.label
         );
     }
   }
 
-  setSelectedMediaDevice({ kind, deviceId }) {
+  setSelectedMediaDevice({ kind, label }) {
     let selectedDevice;
     switch (kind) {
       case "audio-input":
-        selectedDevice = this.findMediaDeviceById(
+        selectedDevice = this.findMediaDeviceByLabel(
           this.audioInputDevices,
-          deviceId
+          label
         );
         this.selectedAudioInputDevice = selectedDevice;
         break;
       case "audio-output":
-        selectedDevice = this.findMediaDeviceById(
+        selectedDevice = this.findMediaDeviceByLabel(
           this.audioOutputDevices,
-          deviceId
+          label
         );
         this.selectedAudioOutputDevice = selectedDevice;
         break;
       case "video-input":
-        selectedDevice = this.findMediaDeviceById(
+        selectedDevice = this.findMediaDeviceByLabel(
           this.videoInputDevices,
-          deviceId
+          label
         );
         this.selectedVideoInputDevice = selectedDevice;
         break;
@@ -144,6 +147,10 @@ class MediaDevice {
     return devices.find((device) => device.deviceId === deviceId);
   }
 
+  findMediaDeviceByLabel(devices, label) {
+    return devices.find((device) => device.label === label);
+  }
+
   filterMediaDevices(devices, kind) {
     return devices.filter((device) => {
       return device.kind === kind;
@@ -153,13 +160,25 @@ class MediaDevice {
 
   setState() {
     this.updateState({
+      ...this.getAvailableMediaDevices(),
+      ...this.getSelectedMediaDevices(),
+    });
+  }
+
+  getAvailableMediaDevices() {
+    return {
       audioInputDevices: this.audioInputDevices,
       audioOutputDevices: this.audioOutputDevices,
       videoInputDevices: this.videoInputDevices,
+    };
+  }
+
+  getSelectedMediaDevices() {
+    return {
       selectedAudioInputDevice: this.selectedAudioInputDevice,
       selectedAudioOutputDevice: this.selectedAudioOutputDevice,
       selectedVideoInputDevice: this.selectedVideoInputDevice,
-    });
+    };
   }
 
   setStateUpdatingFunc(callback) {

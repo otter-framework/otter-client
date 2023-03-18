@@ -6,7 +6,7 @@ class P2P {
     this.sourceId = null; // my WS Gateway Id
     this.destinationId = null; // peer WS Gateway Id
     this.amIPolite = null; // my assigned role => polite or impolite
-    this.turnIsReady = false; // bool to determine whether or not to execute OnNegotiationNeeded handler
+    this.turnIsReady = false; // bool to indicate when TURN credentials have been received
     this.sendSignalingMessage = null; // callback function to send a message
     this.peerConnection = new RTCPeerConnection();
     this.dataChannel = new DataChannel(this.peerConnection);
@@ -20,7 +20,7 @@ class P2P {
   }
 
   addMediaStreamTracks(mediaStream) {
-    console.log(mediaStream.getTracks());
+    // console.log(mediaStream.getTracks());
     // this.peerConnection.addTrack();
   }
 

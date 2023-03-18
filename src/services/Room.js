@@ -13,20 +13,17 @@ class Room {
   constructor() {
     this.id = this.getRoomIdFromURL();
     this.roomInfo = null;
-    this.signalingChannel = null;
-    this.p2p = null;
-    this.mediaDevice = null;
-    this.APIClient = new APIClient(HTTP_GTW_ENDPOINT);
-  }
-
-  initSession() {
     this.signalingChannel = new SignalingChannel(
       this.getId(),
       WEBSOCKET_GTW_ENDPOINT
     );
-    this.mediaDevice = new MediaDevice();
     this.p2p = new P2P(this.getId(), P2P_CONFIG);
+    this.mediaDevice = new MediaDevice();
+    this.APIClient = new APIClient(HTTP_GTW_ENDPOINT);
+    this.setCallbacks();
+  }
 
+  setCallbacks() {
     // Set the handler to process incoming messages
     this.signalingChannel.setOnMessageCb(
       this.p2p.handleSignalingMessage.bind(this.p2p)

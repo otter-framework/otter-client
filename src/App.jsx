@@ -28,11 +28,10 @@ import Session from "./components/Session";
 
 import "./App.css";
 
+const room = new Room();
+
 const App = () => {
   const navigateTo = useNavigate();
-  // const [validatingRoomId, setValidatingRoomId] = useState(true);
-
-  const { current: room } = useRef(new Room());
 
   useEffect(() => {
     const fetchRoomInfo = async () => {
@@ -44,18 +43,28 @@ const App = () => {
       } else {
         navigateTo(`/invalid-room/${roomId}`);
       }
-      // setValidatingRoomId(false);
     };
 
+    const fetchCredentials = async () => {
+      const turnCredentials = await room.APIClient.fetchCredentials();
+      room.p2p.setConfiguration(turnCredentials);
+      room.p2p.setTurnIsReady();
+    };
+
+    room.setCallbacks();
+
     fetchRoomInfo();
+    fetchCredentials();
 
     return () => {
       // Any clean-up needed when the app un-mounts?
       // Close WebSocket connection or send message to the other peer?
       // What if the user refreshes the page?
+      // Destroy the media streams?
     };
   }, []);
 
+  // The WaitingRoom could be just a spinner in the middle waiting for the room id validation
   return (
     <div>
       <h1>Otter Meet</h1>
