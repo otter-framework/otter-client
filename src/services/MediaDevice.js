@@ -11,13 +11,24 @@ class MediaDevice {
     this.setEventHandlers();
   }
 
-  async getUserMedia() {
+  async getUserMedia(mediaRequired) {
     // Need to handle error if user denies permission
+    let audioConstraints = this.getAudioConstraints();
+    let videoConstraints = this.getVideoConstraints();
+
+    if (!/audio/.test(mediaRequired)) {
+      audioConstraints = {};
+    } else if (!/video/.test(mediaRequired)) {
+      videoConstraints = {};
+    }
+
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        ...this.getAudioConstraints(),
-        ...this.getVideoConstraints(),
+        ...audioConstraints,
+        ...videoConstraints,
       });
+
+      mediaStream.type = "audio-video";
       return mediaStream;
     } catch (error) {
       errorLogger(error);
@@ -52,10 +63,12 @@ class MediaDevice {
     this.setState();
   }
 
-  setEventHandlers() {
-    navigator.mediaDevices.ondevicechange = this.handleDeviceChange.bind(this);
-  }
-
+  // This event handler needs to be improved
+  // Two scenarios:
+  // Device(s) is/are added
+  // Device(s) is/are removed
+  // If devices are removed, we need to getUserMedia and update the streams
+  // If devices are added, we should not do anything but list them
   async handleDeviceChange() {
     const mediaDevices = await navigator.mediaDevices.enumerateDevices();
     this.updateMediaDevices(mediaDevices);
@@ -80,19 +93,19 @@ class MediaDevice {
 
   setDefaultMediaDevices() {
     this.selectedAudioInputDevice = this.isSelectedMediaDeviceStillAvailable(
-      "audio-input"
+      "audioinput"
     )
       ? this.selectedAudioInputDevice
       : this.audioInputDevices[0];
 
     this.selectedAudioOutputDevice = this.isSelectedMediaDeviceStillAvailable(
-      "audio-output"
+      "audiooutput"
     )
       ? this.selectedAudioOutputDevice
       : this.audioOutputDevices[0];
 
     this.selectedVideoInputDevice = this.isSelectedMediaDeviceStillAvailable(
-      "video-input"
+      "videoinput"
     )
       ? this.videoInputDevices
       : this.videoInputDevices[0];
@@ -100,39 +113,39 @@ class MediaDevice {
 
   isSelectedMediaDeviceStillAvailable(kind) {
     switch (kind) {
-      case "audio-input":
+      case "audioinput":
         return this.audioInputDevices.some(
           (device) => device.label === this.selectedAudioInputDevice?.label
         );
-      case "audio-output":
+      case "audiooutput":
         return this.audioOutputDevices.some(
           (device) => device.label === this.selectedAudioOutputDevice?.label
         );
-      case "video-input":
+      case "videoinput":
         return this.videoInputDevices.some(
           (device) => device.label === this.selectedVideoInputDevice?.label
         );
     }
   }
 
-  setSelectedMediaDevice({ kind, label }) {
+  setSelectedMediaDevice(kind, label) {
     let selectedDevice;
     switch (kind) {
-      case "audio-input":
+      case "audioinput":
         selectedDevice = this.findMediaDeviceByLabel(
           this.audioInputDevices,
           label
         );
         this.selectedAudioInputDevice = selectedDevice;
         break;
-      case "audio-output":
+      case "audiooutput":
         selectedDevice = this.findMediaDeviceByLabel(
           this.audioOutputDevices,
           label
         );
         this.selectedAudioOutputDevice = selectedDevice;
         break;
-      case "video-input":
+      case "videoinput":
         selectedDevice = this.findMediaDeviceByLabel(
           this.videoInputDevices,
           label
@@ -141,6 +154,7 @@ class MediaDevice {
         break;
     }
     this.setState();
+    // return selectedDevice;
   }
 
   findMediaDeviceById(devices, deviceId) {
@@ -154,7 +168,6 @@ class MediaDevice {
   filterMediaDevices(devices, kind) {
     return devices.filter((device) => {
       return device.kind === kind;
-      // && device.deviceId !== "default";
     });
   }
 
@@ -183,6 +196,10 @@ class MediaDevice {
 
   setStateUpdatingFunc(callback) {
     this.updateState = callback;
+  }
+
+  setEventHandlers() {
+    navigator.mediaDevices.ondevicechange = this.handleDeviceChange.bind(this);
   }
 }
 

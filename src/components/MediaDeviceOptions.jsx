@@ -1,40 +1,26 @@
-import { useState, useEffect } from "react";
 import SelectOptions from "./SelectOptions";
 
-const MediaDeviceOptions = ({ room, onChange }) => {
-  const [mediaDevices, setMediaDevices] = useState(null);
-
-  useEffect(() => {
-    const getUserMedia = async () => {
-      room.mediaDevice.setStateUpdatingFunc(setMediaDevices);
-      const mediaStream = await room.mediaDevice.getUserMedia();
-      room.p2p.addMediaStreamTracks(mediaStream);
-      await room.mediaDevice.getAllMediaDevices();
-    };
-
-    getUserMedia();
-  }, []);
-
+const MediaDeviceOptions = ({ mediaDevices, onChange }) => {
   return (
     <>
       {mediaDevices ? (
         <>
           <SelectOptions
-            type="audio-input"
+            type="audioinput"
             text="Select a Microphone"
             availableDevices={mediaDevices.audioInputDevices}
             selectedDevice={mediaDevices.selectedAudioInputDevice.label}
             onChange={onChange}
           />
           <SelectOptions
-            type="audio-output"
+            type="audiooutput"
             text="Select a Speaker"
             availableDevices={mediaDevices.audioOutputDevices}
             selectedDevice={mediaDevices.selectedAudioOutputDevice.label}
             onChange={onChange}
           />
           <SelectOptions
-            type="video-input"
+            type="videoinput"
             text="Select a Camera"
             availableDevices={mediaDevices.videoInputDevices}
             selectedDevice={mediaDevices.selectedVideoInputDevice.label}

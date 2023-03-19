@@ -16,7 +16,11 @@
 
 // 4. Instantiate the RTCPeerConnection object
 
-import { useState, useEffect, useRef } from "react";
+// 5. ...
+
+// We should display a preview of the camera to the user
+
+import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import adapter from "webrtc-adapter";
 

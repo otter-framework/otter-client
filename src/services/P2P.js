@@ -1,4 +1,5 @@
 import DataChannel from "./DataChannel";
+import Stream from "./Stream";
 
 class P2P {
   constructor(roomId, p2pConfig) {
@@ -9,7 +10,8 @@ class P2P {
     this.turnIsReady = false; // bool to indicate when TURN credentials have been received
     this.sendSignalingMessage = null; // callback function to send a message
     this.peerConnection = new RTCPeerConnection();
-    this.dataChannel = new DataChannel(this.peerConnection);
+    this.dataChannel = new DataChannel(this.peerConnection); // Do we open a channel from the start?
+    this.stream = new Stream(this.peerConnection); // To handle local and remote media streams and tracks
     this.p2pConfig = p2pConfig; // CoTURN config object
     this.setEventHandlers();
   }
@@ -17,35 +19,6 @@ class P2P {
   setTurnIsReady() {
     this.turnIsReady = true;
     this.peerConnection.dispatchEvent(new Event("negotiationneeded")); // if turn credentials arrive after setting the assigned role
-  }
-
-  addMediaStreamTracks(mediaStream) {
-    // console.log(mediaStream.getTracks());
-    // this.peerConnection.addTrack();
-  }
-
-  setEventHandlers() {
-    this.peerConnection.onconnectionstatechange =
-      this.handleConnectionStateChange.bind(this);
-
-    this.peerConnection.onicecandidate = this.handleIceCandidate.bind(this);
-
-    this.peerConnection.onicecandidateerror =
-      this.handleIceCandidateError.bind(this);
-
-    this.peerConnection.oniceconnectionstatechange =
-      this.handleIceConnectionStateChange.bind(this);
-
-    this.peerConnection.onicegatheringstatechange =
-      this.handleIceGatheringStateChange.bind(this);
-
-    this.peerConnection.onnegotiationneeded =
-      this.handleNegotiationNeeded.bind(this);
-
-    this.peerConnection.onsignalingstatechange =
-      this.handleSignalingStateChange.bind(this);
-
-    this.peerConnection.ontrack = this.handleOnTrack.bind(this);
   }
 
   handleConnectionStateChange(event) {
@@ -67,16 +40,23 @@ class P2P {
   }
 
   handleIceConnectionStateChange(event) {
-    console.log(event);
-    // Common task is to perform an ICE restart if this goes to "failed"
-    // Possible states
-    // new
-    // checking
-    // connected
-    // completed
-    // failed - should we restart ICE?
-    // disconnected
-    // closed
+    switch (this.peerConnection.iceConnectionState) {
+      case "new":
+        return;
+      case "checking":
+        return;
+      case "connected":
+        return;
+      case "completed":
+        return;
+      case "failed":
+        this.peerConnection.restartIce();
+        return;
+      case "disconnected":
+        return;
+      case "closed":
+        return;
+    }
   }
 
   handleIceGatheringStateChange(event) {
@@ -89,7 +69,6 @@ class P2P {
 
   handleNegotiationNeeded(event) {
     if (!this.turnIsReady || !this.roleIsAssigned()) return;
-    console.log(event);
     // Fired when negotiation through the signaling channel is required
     // First occurs when media is added to the connection
   }
@@ -102,10 +81,6 @@ class P2P {
     // have-local-pranswer
     // have-remote-pranswer
     // closed
-  }
-
-  handleOnTrack(trackEvent) {
-    // Fired when a peer's media stream track has been added to the peer connection
   }
 
   handleSignalingMessage(message) {
@@ -169,10 +144,6 @@ class P2P {
     this.peerConnection.setConfiguration(this.p2pConfig);
   }
 
-  setSendSignalingMessageCb(func) {
-    this.sendSignalingMessage = func;
-  }
-
   buildMessageStructure(payload) {
     return {
       roomId: this.roomId,
@@ -181,6 +152,32 @@ class P2P {
       polite: this.amIPolite,
       payload,
     };
+  }
+
+  setSendSignalingMessageCb(func) {
+    this.sendSignalingMessage = func;
+  }
+
+  setEventHandlers() {
+    this.peerConnection.onconnectionstatechange =
+      this.handleConnectionStateChange.bind(this);
+
+    this.peerConnection.onicecandidate = this.handleIceCandidate.bind(this);
+
+    this.peerConnection.onicecandidateerror =
+      this.handleIceCandidateError.bind(this);
+
+    this.peerConnection.oniceconnectionstatechange =
+      this.handleIceConnectionStateChange.bind(this);
+
+    this.peerConnection.onicegatheringstatechange =
+      this.handleIceGatheringStateChange.bind(this);
+
+    this.peerConnection.onnegotiationneeded =
+      this.handleNegotiationNeeded.bind(this);
+
+    this.peerConnection.onsignalingstatechange =
+      this.handleSignalingStateChange.bind(this);
   }
 }
 
