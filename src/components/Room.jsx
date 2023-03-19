@@ -8,7 +8,7 @@ import { RESTAPIEndpoint as baseURL } from "../configs/configs";
 import ScreenShare from "./ScreenShare";
 
 // use this for now (the useLocation when the final link is provided)
-const roomId = window.location.pathname.split("/")[2];
+const roomId = window.location.pathname.split("/")[2]; // "url.com/otter-room/<uuid>"
 const pc = new WebRTCService(roomId);
 
 const Room = () => {
@@ -94,6 +94,7 @@ const Room = () => {
             <video
               className="video-player"
               id="local"
+              muted
               autoPlay
               playsInline
               ref={(video) => {

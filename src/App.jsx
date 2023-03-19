@@ -7,7 +7,7 @@ function App() {
     <div className="App">
       <h1>Peer to Peer Video Chat</h1>
       <Routes>
-        <Route path="/otter-room/:roomId" element={<Room />} />
+        <Route path="/otter-meet/:roomId" element={<Room />} />
       </Routes>
     </div>
   );
