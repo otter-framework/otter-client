@@ -27,13 +27,8 @@ class APIClient {
 
   async fetchCredentials() {
     try {
-      // Just for testing purposes - needs to be removed for production
-      return {
-        username: "1679092952-:-randomUserId",
-        credential: "JIZ3DLVeJz8U5PnD4FtfS1nNX/w=",
-      };
-      // const response = await axios.get(`${this.endpoint}/credentials`);
-      // return response.data;
+      const response = await axios.get(`${this.endpoint}/credentials`);
+      return response.data;
     } catch (error) {
       const statusCode = error.response.status;
       if ([500].includes(statusCode)) {

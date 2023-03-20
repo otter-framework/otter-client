@@ -1,13 +1,21 @@
+import { errorLogger } from "../utilities/logger";
 import DataChannel from "./DataChannel";
 import Stream from "./Stream";
 
 class P2P {
+  static ICE_CANDIDATES_BATCH = 5;
+
   constructor(roomId, p2pConfig) {
     this.roomId = roomId;
     this.sourceId = null; // my WS Gateway Id
     this.destinationId = null; // peer WS Gateway Id
     this.amIPolite = null; // my assigned role => polite or impolite
+    this.makingOffer = false; // bool to indicate if an offer is being built and sent
+    this.ignoreOffer = false; // bool to indicate if we ignored an offer
+    this.isSettingRemoteAnswerPending = false; // bool to indicate if we are setting the remote answer
     this.turnIsReady = false; // bool to indicate when TURN credentials have been received
+    this.iceCandidatesToSend = [];
+    this.iceCandidatesReceived = [];
     this.sendSignalingMessage = null; // callback function to send a message
     this.peerConnection = new RTCPeerConnection();
     this.dataChannel = new DataChannel(this.peerConnection); // Do we open a channel from the start?
@@ -26,17 +34,24 @@ class P2P {
   }
 
   handleIceCandidate(iceEvent) {
-    console.log(iceEvent);
-    // Fired when we call this.peerConnection.setLocalDescription() with a new RTCIceCandidate
-    // We need to send the new candidate to the remote peer through the signaling channel
-    // Are we able to hold on to the ice candidates and send a couple of them at the same time
-    // When ICE runs out of candidates it sends a candidate with an empty string
-    // When ICE completes it sends a candidate with null - no need to send this one
+    const { candidate } = iceEvent;
+    // Null candidate indicates the end of ICE
+    if (candidate === null) return;
+
+    this.iceCandidatesToSend.push(candidate);
+
+    if (candidate === "" || this.readyToSendIceCandidates()) {
+      this.sendSignalingMessage(
+        this.buildMessageStructure({ candidates: this.iceCandidatesToSend })
+      );
+      this.resetIceCandidatesToSend();
+      return;
+    }
   }
 
   handleIceCandidateError(iceErrorEvent) {
-    console.log(iceErrorEvent);
-    // Do we want to do anything if ICE negotiation fails with STUN/TURN server?
+    console.log("IceErrorEvent", iceErrorEvent);
+    this.restartIce();
   }
 
   handleIceConnectionStateChange(event) {
@@ -50,7 +65,7 @@ class P2P {
       case "completed":
         return;
       case "failed":
-        this.peerConnection.restartIce();
+        this.restartIce();
         return;
       case "disconnected":
         return;
@@ -60,17 +75,28 @@ class P2P {
   }
 
   handleIceGatheringStateChange(event) {
-    console.log(event);
     // Possible states
     // new
     // gathering
     // complete - equivalent to receiving a candidate with null
   }
 
-  handleNegotiationNeeded(event) {
+  async handleNegotiationNeeded() {
     if (!this.turnIsReady || !this.roleIsAssigned()) return;
-    // Fired when negotiation through the signaling channel is required
-    // First occurs when media is added to the connection
+
+    try {
+      this.makingOffer = true;
+      await this.peerConnection.setLocalDescription();
+      this.sendSignalingMessage(
+        this.buildMessageStructure({
+          description: this.peerConnection.localDescription,
+        })
+      );
+    } catch (error) {
+      errorLogger(error);
+    } finally {
+      this.makingOffer = false;
+    }
   }
 
   handleSignalingStateChange(event) {
@@ -83,50 +109,107 @@ class P2P {
     // closed
   }
 
-  handleSignalingMessage(message) {
+  async handleSignalingMessage(message) {
     const {
       source: destination,
       destination: source,
       polite: isMyPeerPolite,
       payload,
     } = message;
+
+    // The endConnection Lambda should send the same message as the Connect Lambda but with source set to null to indicate that the other peer is no longer available
+    // This is temporary
+    if (!destination) {
+      this.setDestinationId(destination);
+      return;
+    }
+
     this.setSourceId(source);
     this.setDestinationId(destination);
+    this.setAssignedRole(isMyPeerPolite);
 
     // When the first message is received, the source can be:
     // The $connect Lambda in which case you are the first peer to connect (i.e., impolite peer)
     // From the other peer in which case you are the second peer to connect (i.e., polite peer)
 
-    // The first peer needs to send the session-info to the second peer
-    // The second peer needs to start the negotiation
-    if (!payload) {
-      this.setAssignedRole(isMyPeerPolite);
-      if (!this.amIPolite) {
-        this.sendSignalingMessage(this.buildMessageStructure(null));
-      } else {
-        this.peerConnection.dispatchEvent(new Event("negotiationneeded"));
-      }
+    // The first peer starts the offer once it can
+    if (!this.amIPolite && !payload) {
+      this.peerConnection.dispatchEvent(new Event("negotiationneeded"));
       return;
     }
 
-    this.processPayload(payload);
+    await this.processPayload(payload);
+  }
+
+  async processPayload({ description, candidates }) {
+    try {
+      if (description) {
+        const readyForOffer =
+          !this.makingOffer &&
+          (this.peerConnection.signalingState === "stable" ||
+            this.isSettingRemoteAnswerPending);
+
+        const offerCollision = description.type === "offer" && readyForOffer;
+
+        this.ignoreOffer = !this.amIPolite && offerCollision;
+        if (this.ignoreOffer) return;
+
+        this.isSettingRemoteAnswerPending = description.type === "answer";
+        await this.peerConnection.setRemoteDescription(description);
+        this.isSettingRemoteAnswerPending = false;
+
+        if (description.type === "offer") {
+          await this.peerConnection.setLocalDescription();
+          this.sendSignalingMessage(
+            this.buildMessageStructure({
+              description: this.peerConnection.localDescription,
+            })
+          );
+        }
+        await this.startIceProcess();
+      } else if (candidates) {
+        await this.processRemoteIceCandidates(candidates);
+      }
+    } catch (error) {
+      errorLogger(error);
+    }
+  }
+
+  async processRemoteIceCandidates(candidates) {
+    if (this.peerConnection.remoteDescription === null) {
+      candidates.forEach((candidate) => {
+        this.iceCandidatesReceived.push(candidate);
+      });
+    } else {
+      await this.startIceProcess();
+    }
+  }
+
+  async startIceProcess() {
+    this.iceCandidatesReceived.forEach(async (candidate, idx) => {
+      try {
+        await this.peerConnection.addIceCandidate(candidate);
+        if (idx === this.iceCandidatesReceived.length) {
+          this.resetIceCandidatesReceived();
+        }
+      } catch (error) {
+        if (!this.ignoreOffer) {
+          throw error;
+        }
+      }
+    });
   }
 
   setSourceId(sourceId) {
-    this.sourceId = this.sourceId || sourceId;
+    this.sourceId = sourceId;
   }
 
   setDestinationId(destinationId) {
-    this.destinationId = this.destinationId || destinationId;
+    this.destinationId = destinationId;
   }
 
   setAssignedRole(isMyPeerPolite) {
-    if (this.roleIsAssigned()) return;
     this.amIPolite = !isMyPeerPolite;
-  }
-
-  processPayload(payload) {
-    // Perfect Negotiation
   }
 
   roleIsAssigned() {
@@ -152,6 +235,24 @@ class P2P {
       polite: this.amIPolite,
       payload,
     };
+  }
+
+  restartIce() {
+    this.resetIceCandidatesToSend();
+    this.resetIceCandidatesReceived();
+    this.peerConnection.restartIce();
+  }
+
+  readyToSendIceCandidates() {
+    return this.iceCandidatesToSend.length >= P2P.ICE_CANDIDATES_BATCH;
+  }
+
+  resetIceCandidatesToSend() {
+    this.iceCandidatesToSend = [];
+  }
+
+  resetIceCandidatesReceived() {
+    this.iceCandidatesReceived = [];
   }
 
   setSendSignalingMessageCb(func) {

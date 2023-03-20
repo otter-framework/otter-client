@@ -8,20 +8,24 @@ const DisplayMediaStreams = ({
 }) => {
   if (!localStreams) return;
 
-  const audioVideoStream = localStreams["audio-video"];
-  const audioStatus = audioVideoStream.getAudioTracks()[0].enabled;
-  const videoStatus = audioVideoStream.getVideoTracks()[0].enabled;
+  const audioVideoStream = localStreams["audioVideo"];
+  // const screenShareStream = localStreams["screenShare"];
 
-  const handleStopAudio = () => {
+  const audioStatus = audioVideoStream.getAudioTracks()[0]?.enabled;
+  const videoStatus = audioVideoStream.getVideoTracks()[0]?.enabled;
+
+  const handleAudioChange = () => {
     // The stop button could be an icon
     onMuteAudio();
   };
 
-  const handleStopVideo = () => {
+  const handleVideoChange = () => {
     // The stop button could be an icon
     // We can display the Otter logo in the middle of the screen
     onStopVideo();
   };
+
+  // const handleScreenShareChange = () => {};
 
   return (
     <div>
@@ -34,16 +38,16 @@ const DisplayMediaStreams = ({
           // wrapper={} // This is the component that will be used as the container of the player
           playsinline={true}
         />
-        <button onClick={handleStopAudio}>
+        <button onClick={handleAudioChange}>
           {audioStatus ? "Mute audio" : "Unmute audio"}
         </button>
-        <button onClick={handleStopVideo}>
+        <button onClick={handleVideoChange}>
           {videoStatus ? "Stop camera" : "Start camera"}
         </button>
       </>
       {remoteStreams ? (
         <ReactPlayer
-          url={remoteStreams["audio-video"]}
+          url={remoteStreams["audioVideo"]}
           playing={true}
           // width={640}
           // height={360}
@@ -51,6 +55,7 @@ const DisplayMediaStreams = ({
           playsinline={true}
         />
       ) : null}
+      {/* <button onClick={handleScreenShareChange}>Start screen-sharing</button> */}
     </div>
   );
 };

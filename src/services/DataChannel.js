@@ -1,28 +1,38 @@
 class DataChannel {
   constructor(peerConnection) {
     this.peerConnection = peerConnection;
-    this.channels = {};
-    this.setEventHandlers();
+    this.channel = this.initDataChannel();
+    this.remoteMessages = [];
+    this.updateRemoteTexts = null;
+    this.readyToSendMessages = null;
   }
 
-  createDataChannel(label) {
-    // Each data channel has an ID property that uniquely identifies them
-    // We can also decide to only allow data channels that have different names as shown here
-    if (this.channelAlreadyExists(label)) return;
-    const channel = this.peerConnection.createDataChannel(label);
-    this.storeChannel(channel);
+  initDataChannel() {
+    const channel = this.peerConnection.createDataChannel("messages", {
+      negotiated: true,
+      id: 1,
+    });
     this.setDataChannelEventHandlers(channel);
     return channel;
   }
 
-  setEventHandlers() {
-    this.peerConnection.ondatachannel = this.handleNewDataChannel.bind(this);
+  send(message) {
+    this.channel.send(message);
   }
 
-  handleNewDataChannel(dataChannelEvent) {
-    const { channel } = dataChannelEvent;
-    this.storeChannel(channel);
-    this.setDataChannelEventHandlers(channel);
+  handleDataChannelOpen() {
+    this.readyToSendMessages(true);
+  }
+
+  handleDataChannelMessage(messageEvent) {
+    const { data } = messageEvent;
+    this.remoteMessages.push(data);
+    this.updateRemoteTexts([...this.remoteMessages]);
+  }
+
+  handleDataChannelClose(event) {
+    // const { channel } = event; // not sure the event provides the channel property
+    // this.removeDataChannel(channel);
     // ...
   }
 
@@ -37,37 +47,48 @@ class DataChannel {
     channel.onclose = this.handleDataChannelClose.bind(this);
   }
 
-  handleDataChannelOpen(dataChannelEvent) {
-    const { channel } = dataChannelEvent;
-    // ...
+  setStateUpdatingFunc(updateRemoteTexts, readyToSendMessages) {
+    this.updateRemoteTexts = updateRemoteTexts;
+    this.readyToSendMessages = readyToSendMessages;
   }
 
-  handleDataChannelMessage(messageEvent) {
-    const { data } = messageEvent;
-    // ...
-  }
+  // handleNewDataChannel(dataChannelEvent) {
+  // const { channel } = dataChannelEvent;
+  // this.storeChannel(channel);
+  // this.setDataChannelEventHandlers(channel);
+  // ...
+  // }
 
-  handleDataChannelClose(event) {
-    // const { channel } = event; // not sure the event provides the channel property
-    // this.removeDataChannel(channel);
-    // ...
-  }
+  // setEventHandlers() {
+  //   this.peerConnection.ondatachannel = this.handleNewDataChannel.bind(this);
+  // }
 
-  storeChannel(channel) {
-    this.channels[channel.label] = channel;
-  }
+  // This function allows the creation of multiple channels
+  // createDataChannel(label) {
+  //   // Each data channel has an ID property that uniquely identifies them
+  //   // We can also decide to only allow data channels that have different names as shown here
+  //   if (this.channelAlreadyExists(label)) return;
+  //   const channel = this.peerConnection.createDataChannel(label);
+  //   this.storeChannel(channel);
+  //   this.setDataChannelEventHandlers(channel);
+  //   return channel;
+  // }
 
-  channelAlreadyExists(label) {
-    return this.channels[label];
-  }
+  // storeChannel(channel) {
+  //   this.channels[channel.label] = channel;
+  // }
 
-  removeDataChannel(channel) {
-    delete this.channels[channel.label];
-  }
+  // channelAlreadyExists(label) {
+  //   return this.channels[label];
+  // }
 
-  getChannelBy(label) {
-    return this.channels[label];
-  }
+  // removeDataChannel(channel) {
+  //   delete this.channels[channel.label];
+  // }
+
+  // getChannelBy(label) {
+  //   return this.channels[label];
+  // }
 }
 
 export default DataChannel;

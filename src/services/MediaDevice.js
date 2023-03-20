@@ -28,7 +28,6 @@ class MediaDevice {
         ...videoConstraints,
       });
 
-      mediaStream.type = "audio-video";
       return mediaStream;
     } catch (error) {
       errorLogger(error);
@@ -60,20 +59,19 @@ class MediaDevice {
     const mediaDevices = await navigator.mediaDevices.enumerateDevices();
     this.updateMediaDevices(mediaDevices);
     this.setDefaultMediaDevices();
-    this.setState();
   }
 
   // This event handler needs to be improved
   // Two scenarios:
   // Device(s) is/are added
   // Device(s) is/are removed
-  // If devices are removed, we need to getUserMedia and update the streams
-  // If devices are added, we should not do anything but list them
+  // If the device being used is removed then we need to getUserMedia and change the track
+  // If the device being used is not affected then we just list the new media devices
   async handleDeviceChange() {
-    const mediaDevices = await navigator.mediaDevices.enumerateDevices();
-    this.updateMediaDevices(mediaDevices);
-    this.setDefaultMediaDevices();
-    this.setState();
+    // const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+    // this.updateMediaDevices(mediaDevices);
+    // this.setDefaultMediaDevices();
+    // this.setState();
   }
 
   updateMediaDevices(mediaDevices) {
@@ -153,8 +151,6 @@ class MediaDevice {
         this.selectedVideoInputDevice = selectedDevice;
         break;
     }
-    this.setState();
-    // return selectedDevice;
   }
 
   findMediaDeviceById(devices, deviceId) {
