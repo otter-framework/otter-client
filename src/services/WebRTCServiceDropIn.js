@@ -31,6 +31,10 @@ class WebRTCService {
   }
 
   setSessionInfo({ source, destination, polite, payload }) {
+    if (source === null) {
+      this.mediaConnections = {};
+    }
+
     this.connectionId = destination; // flip source and destination
     this.peerConnectionId = source;
     this.polite = !polite;
@@ -101,8 +105,12 @@ class WebRTCService {
       this.handleConnectionStateChange.bind(this);
   }
 
-  setStreams(local, remote) {
+  setLocalStreams(local) {
+    if (!local) return;
     this.localStream = local;
+  }
+
+  setRemoteStream(remote) {
     this.remoteStream = remote;
   }
 
@@ -156,6 +164,7 @@ class WebRTCService {
         dl("we are connected");
         break;
       case "disconnected":
+        this.mediaConnections = {};
         dl("we are disconnected");
       // this.pc.close();
       // dl("we have closed the connection");

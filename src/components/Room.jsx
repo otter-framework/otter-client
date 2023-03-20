@@ -24,14 +24,18 @@ const Room = () => {
   const dataFetchedRef = useRef(false); // stops useEffect from running twice
   const mediaService = new MediaService();
 
-  const startStream = async () => {
+  const startRemoteStream = () => {
+    const remote = mediaService.initRemoteStream();
+    setRemoteStream(remote);
+    pc.setRemoteStream(remote);
+  };
+
+  const startLocalStream = async () => {
     console.log("start Stream");
     const local = await mediaService.getLocalStream();
-    const remote = mediaService.initRemoteStream();
-    pc.setStreams(local, remote);
+    pc.setLocalStreams(local);
     pc.setupLocalMedia(); // add local tracks to peerConnection
     setLocalStream(local);
-    setRemoteStream(remote);
   };
 
   const toggleMuteAudio = () => {
@@ -80,7 +84,8 @@ const Room = () => {
   useEffect(() => {
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
-    startStream();
+    startRemoteStream();
+    startLocalStream();
   }, []);
 
   return (
@@ -139,8 +144,8 @@ const Room = () => {
               <img
                 src={
                   mic
-                    ? "https://super.so/icon/dark/volume-x.svg"
-                    : "https://super.so/icon/dark/volume-2.svg"
+                    ? "https://super.so/icon/dark/volume-2.svg"
+                    : "https://super.so/icon/dark/volume-x.svg"
                 }
               />
             </div>

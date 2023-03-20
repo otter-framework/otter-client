@@ -23,7 +23,7 @@ button {
 }
 
 body {
-  background-image: url("/otter 5o.svg");
+  background-image: url("/otter_5o.svg");
   background-repeat: no-repeat;
   background-size: cover;
   background-color: beige;
@@ -43,9 +43,16 @@ div {
 
 #videos {
   display: grid;
-  grid-template-columns: 1fr;
-  height: 100vh;
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+  /* height: 100vh; */
+  /* overflow: hidden; */
+}
+
+#local {
+}
+
+#remote {
 }
 
 .smallFrame {
@@ -63,6 +70,7 @@ div {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background-color: black;
 }
 
 #controls {
