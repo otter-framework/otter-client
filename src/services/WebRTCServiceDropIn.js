@@ -112,9 +112,6 @@ class WebRTCService {
       }
     } catch (e) {
       this.handleError(e);
-    } finally {
-      dl("reach me");
-      this.rerenderApp(true);
     }
   }
 
