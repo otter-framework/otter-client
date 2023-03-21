@@ -21,7 +21,7 @@ class WebRTCService {
     this.makingOffer = false;
     this.ignoreOffer = false;
     this.isSettingRemoteAnswerPending = false;
-    this.mediaConnections = {};
+    this.mediaConnections = {}; // id: MediaStream
     this.isTurnReady = false;
   }
 
@@ -112,6 +112,9 @@ class WebRTCService {
       }
     } catch (e) {
       this.handleError(e);
+    } finally {
+      dl("reach me");
+      this.rerenderApp(true);
     }
   }
 
@@ -192,9 +195,7 @@ class WebRTCService {
   }
 
   async handleNegotiationNeeded() {
-    // dl("negotiation needed 2");
     if (!this.isRoleAssigned() || !this.isTurnReady) {
-      // dl("negotiation not needed yet");
       return;
     }
     try {
@@ -250,6 +251,7 @@ class WebRTCService {
     if (keys.length === 0) {
       this.mediaConnections[id] = this.remoteStream;
     } else if (keys.length > 0 && !keys.includes(id)) {
+      // TODO: disable my screen share button
       this.mediaConnections[id] = this.remoteScreen;
     }
     event.streams[0].getTracks().forEach((track) => {

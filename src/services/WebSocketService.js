@@ -16,6 +16,7 @@ class WebSocketService {
 
   async onMessage(event) {
     const data = JSON.parse(event.data);
+    dl("new message", data);
     await this.messageHandler(data);
   }
 
