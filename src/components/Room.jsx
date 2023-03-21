@@ -23,7 +23,7 @@ const Room = () => {
   const mediaService = new MediaService();
 
   const startRemoteStream = () => {
-    const remote = mediaService.initRemoteStream();
+    const remote = mediaService.initRemoteStream(); // new MediaStream
     setRemoteStream(remote);
     pcRef.current.setRemoteStream(remote);
   };
@@ -134,7 +134,9 @@ const Room = () => {
           />
         </div>
       </div>
-      <ScreenShare pc={pcRef.current} mediaService={mediaService} />
+      {/* {pcRef.current ? (
+        <ScreenShare pc={pcRef.current} mediaService={mediaService} />
+      ) : null} */}
       <DataChannel connection={pcRef.current} />
     </div>
   );

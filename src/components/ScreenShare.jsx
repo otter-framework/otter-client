@@ -12,20 +12,24 @@ const ScreenShare = ({ mediaService, pc }) => {
     setLocalScreen(local);
   };
 
-  const startRemoteScreenOnMount = () => {
-    if (!pc) return;
-    const remote = mediaService.initRemoteStream();
-    pc.setRemoteScreen(remote);
-    setRemoteScreen(remote);
-  };
-
   useEffect(() => {
+    const startRemoteScreenOnMount = () => {
+      const remote = mediaService.initRemoteStream();
+      pc.setRemoteScreen(remote);
+      setRemoteScreen(remote);
+    };
     startRemoteScreenOnMount();
   }, []);
 
   const stopShare = () => {
     let tracks = localScreen.getTracks();
-    tracks.forEach((track) => track.stop());
+    tracks.forEach((track) => {
+      let sender = pc.pc.getSenders().find((s) => {
+        return s.track === track;
+      });
+      pc.pc.removeTrack(sender);
+      track.stop();
+    });
     setLocalScreen(null);
   };
 
