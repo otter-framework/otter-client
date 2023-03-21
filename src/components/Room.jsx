@@ -134,7 +134,7 @@ const Room = () => {
           />
         </div>
       </div>
-      {/* <ScreenShare pc={pcRef.current} mediaService={mediaService} /> */}
+      <ScreenShare pc={pcRef.current} mediaService={mediaService} />
       <DataChannel connection={pcRef.current} />
     </div>
   );

@@ -11,7 +11,7 @@ class APIClient {
   async fetchRoomInfo(roomId) {
     try {
       const response = await axios.get(
-        `${this.endpoint}/room/${roomId}?token=${queryToken}`
+        `${this.endpoint}/room/${roomId}?token=${this.token}`
       );
       return response.data;
     } catch (error) {
@@ -31,7 +31,7 @@ class APIClient {
   async fetchCredentials() {
     try {
       const response = await axios.get(
-        `${this.endpoint}/credentials?token=${queryToken}`
+        `${this.endpoint}/credentials?token=${this.token}`
       );
       return response.data;
     } catch (error) {
