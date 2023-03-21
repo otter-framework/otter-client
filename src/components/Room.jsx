@@ -16,6 +16,7 @@ const Room = () => {
   const [vid, setVid] = useState(true);
   const location = useLocation();
   const roomId = location.pathname.split("/")[2]; // "url.com/otter-room/<uuid>"
+  const token = location.search.split("=")[1];
   const apiRef = useRef(null);
   const pcRef = useRef(null);
   const dataFetchedRef = useRef(false); // stops useEffect from running twice
@@ -70,8 +71,8 @@ const Room = () => {
   useEffect(() => {
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
-    apiRef.current = new APIClient(RESTAPIEndpoint);
-    pcRef.current = new WebRTCService(roomId);
+    apiRef.current = new APIClient(RESTAPIEndpoint, token);
+    pcRef.current = new WebRTCService(roomId, token);
     fetchCredentials();
     startRemoteStream();
     startLocalStream();

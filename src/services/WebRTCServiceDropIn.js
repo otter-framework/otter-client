@@ -4,9 +4,9 @@ import DataChannel from "./DataChannelService";
 import WebSocketService from "./WebSocketService";
 
 class WebRTCService {
-  constructor(roomId) {
+  constructor(roomId, queryToken) {
     this.pc = new RTCPeerConnection(RTCConfig);
-    this.signalingChannel = new WebSocketService(roomId);
+    this.signalingChannel = new WebSocketService(roomId, queryToken);
     this.signalingChannel.setMessageHandler(
       this.signalingChannelDataHandler.bind(this)
     );

@@ -3,13 +3,16 @@ import axios from "axios";
 import { handleError } from "../utils/ErrorLog";
 
 class APIClient {
-  constructor(endpoint) {
+  constructor(endpoint, queryToken) {
     this.endpoint = endpoint;
+    this.token = queryToken;
   }
 
   async fetchRoomInfo(roomId) {
     try {
-      const response = await axios.get(`${this.endpoint}/room/${roomId}`);
+      const response = await axios.get(
+        `${this.endpoint}/room/${roomId}?token=${queryToken}`
+      );
       return response.data;
     } catch (error) {
       const statusCode = error.response.status;
@@ -27,7 +30,9 @@ class APIClient {
 
   async fetchCredentials() {
     try {
-      const response = await axios.get(`${this.endpoint}/credentials`);
+      const response = await axios.get(
+        `${this.endpoint}/credentials?token=${queryToken}`
+      );
       return response.data;
     } catch (error) {
       const statusCode = error.response.status;

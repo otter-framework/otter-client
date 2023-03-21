@@ -2,8 +2,10 @@ import { WebSocketEndpoint } from "../configs/configs";
 import { dl } from "../utils/DateLog";
 
 class WebSocketService {
-  constructor(roomId) {
-    this.websocket = new WebSocket(WebSocketEndpoint + `?roomId=${roomId}`);
+  constructor(roomId, queryToken) {
+    this.websocket = new WebSocket(
+      `${WebSocketEndpoint}?roomId=${roomId}&token=${queryToken}`
+    );
     this.websocket.onopen = this.onOpen.bind(this);
     this.messageHandler = null;
   }
