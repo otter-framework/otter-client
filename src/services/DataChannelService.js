@@ -26,7 +26,11 @@ class DataChannel {
 
   handleDataChannelMessage(messageEvent) {
     const { data } = messageEvent;
-    this.remoteMessages.push(data);
+    console.log(messageEvent);
+    this.remoteMessages.push({
+      text: data,
+      time: new Date(),
+    });
     this.updateRemoteTexts([...this.remoteMessages]);
   }
 

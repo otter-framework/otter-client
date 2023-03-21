@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { dl } from "../utils/DateLog";
 
 const ScreenShare = ({ mediaService, pc }) => {
-  const [screen, setScreen] = useState(null);
-
   const [localScreen, setLocalScreen] = useState(null);
   const [remoteScreen, setRemoteScreen] = useState(null);
 
@@ -15,6 +13,7 @@ const ScreenShare = ({ mediaService, pc }) => {
   };
 
   const startRemoteScreenOnMount = () => {
+    if (!pc) return;
     const remote = mediaService.initRemoteStream();
     pc.setRemoteScreen(remote);
     setRemoteScreen(remote);
@@ -22,10 +21,6 @@ const ScreenShare = ({ mediaService, pc }) => {
 
   useEffect(() => {
     startRemoteScreenOnMount();
-
-    return () => {
-      setRemoteScreen(null);
-    };
   }, []);
 
   const stopShare = () => {
@@ -42,6 +37,7 @@ const ScreenShare = ({ mediaService, pc }) => {
         <button onClick={startScreen}>Share screen</button>
       )}
       <video
+        className="screen-share"
         autoPlay
         muted
         ref={(video) => {
@@ -50,6 +46,7 @@ const ScreenShare = ({ mediaService, pc }) => {
         playsInline
       />
       <video
+        className="screen-share"
         autoPlay
         muted
         ref={(video) => {

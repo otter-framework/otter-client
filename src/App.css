@@ -55,6 +55,11 @@ div {
 #remote {
 }
 
+/* .screen-share {
+  height: 100vh;
+  width: auto;
+} */
+
 .smallFrame {
   position: fixed;
   top: 20px;
