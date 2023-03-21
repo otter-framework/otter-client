@@ -1,5 +1,6 @@
 import { RTCConfig } from "../configs/configs";
 import { dl } from "../utils/DateLog";
+import DataChannel from "./DataChannelService";
 import WebSocketService from "./WebSocketService";
 
 class WebRTCService {
@@ -9,6 +10,7 @@ class WebRTCService {
     this.signalingChannel.setMessageHandler(
       this.signalingChannelDataHandler.bind(this)
     );
+    this.dataChannel = new DataChannel(this.pc);
     this.candidates = [];
     this.candidatesToSend = [];
     this.roomId = roomId;
@@ -20,34 +22,52 @@ class WebRTCService {
     this.ignoreOffer = false;
     this.isSettingRemoteAnswerPending = false;
     this.mediaConnections = {};
+    this.isTurnReady = false;
   }
 
   async signalingChannelDataHandler(data) {
-    dl("data inside signal handler", data);
+    // dl("data inside signal handler", data);
     this.setSessionInfo(data);
     if (data.payload) {
       await this.processPayload(data.payload);
     }
   }
 
+  setConfiguration(credentials) {
+    const currentConfig = RTCConfig.iceServers[0];
+    RTCConfig.iceServers = [
+      {
+        ...currentConfig,
+        ...credentials,
+      },
+    ];
+    this.pc.setConfiguration(RTCConfig);
+    this.setIsTurnReady();
+  }
+
+  setIsTurnReady() {
+    this.isTurnReady = true;
+  }
+
+  isRoleAssigned() {
+    return this.polite !== null;
+  }
+
   setSessionInfo({ source, destination, polite, payload }) {
+    this.peerConnectionId = source;
+
     if (source === null) {
       this.mediaConnections = {};
+      this.polite = null;
+      return;
     }
 
     this.connectionId = destination; // flip source and destination
-    this.peerConnectionId = source;
     this.polite = !polite;
 
-    if (!payload) {
-      if (!this.polite) {
-        dl("inside first message and not polite");
-        this.sendToServer(null);
-      } else {
-        dl("inside firstMessage and polite");
-        const event = new Event("negotiationneeded");
-        this.pc.dispatchEvent(event);
-      }
+    if (!payload && this.polite === false) {
+      const event = new Event("negotiationneeded");
+      this.pc.dispatchEvent(event);
     }
 
     if (this.peerConnectionId && this.candidatesToSend.length) {
@@ -63,22 +83,22 @@ class WebRTCService {
           !this.makingOffer &&
           (this.pc.signalingState == "stable" ||
             this.isSettingRemoteAnswerPending);
-        dl("Ready for Offer", readyForOffer);
+        // dl("Ready for Offer", readyForOffer);
 
         const offerCollision = payload.type == "offer" && !readyForOffer;
-        dl("offer collision", offerCollision);
+        // dl("offer collision", offerCollision);
 
         this.ignoreOffer = this.polite && offerCollision;
-        dl("ignore Offer", this.ignoreOffer);
+        // dl("ignore Offer", this.ignoreOffer);
         if (this.ignoreOffer) return;
 
         this.isSettingRemoteAnswerPending = payload.type == "answer";
         await this.pc.setRemoteDescription(payload);
         this.isSettingRemoteAnswerPending = false;
-        dl("Remote description set!");
+        // dl("Remote description set!");
 
         if (payload.type === "offer") {
-          dl("offer received");
+          // dl("offer received");
           await this.pc.setLocalDescription();
           this.sendToServer(this.pc.localDescription);
         }
@@ -161,20 +181,20 @@ class WebRTCService {
   handleConnectionStateChange() {
     switch (this.pc.connectionState) {
       case "connected":
-        dl("we are connected");
+        // dl("we are connected");
         break;
       case "disconnected":
         this.mediaConnections = {};
-        dl("we are disconnected");
+      // dl("we are disconnected");
       // this.pc.close();
       // dl("we have closed the connection");
     }
   }
 
   async handleNegotiationNeeded() {
-    dl("negotiation needed 2");
-    if (this.polite === null) {
-      dl("this.polite not set yet, negotiation not needed yet");
+    // dl("negotiation needed 2");
+    if (!this.isRoleAssigned() || !this.isTurnReady) {
+      // dl("negotiation not needed yet");
       return;
     }
     try {
@@ -189,7 +209,7 @@ class WebRTCService {
   }
 
   async processCandidates() {
-    dl("Processing early candidates now");
+    // dl("Processing early candidates now");
     for (let candidate of this.candidates) {
       await this.addCandidate(candidate);
     }
@@ -198,7 +218,7 @@ class WebRTCService {
 
   async addCandidate(candidate) {
     if (this.pc.remoteDescription == null) {
-      dl("Remote description still null, adding to candidates list");
+      // dl("Remote description still null, adding to candidates list");
       return this.candidates.push(candidate);
     }
     if (candidate) {
@@ -223,7 +243,7 @@ class WebRTCService {
   }
 
   handleOnTrack(event) {
-    dl("Adding remote track", event);
+    // dl("Adding remote track", event);
     // add connection mapping
     let keys = Object.keys(this.mediaConnections);
     let id = event.streams[0].id;
@@ -238,7 +258,7 @@ class WebRTCService {
   }
 
   handleError(error) {
-    console.error(`Failure when doing: ${error.name} ${error}`);
+    dl(`Failure when doing: ${error.name} ${error}`);
   }
 }
 

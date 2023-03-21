@@ -1,41 +1,48 @@
-import axios from "axios";
 import { useRef, useState, useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import MediaService from "../services/MediaService";
 import WebRTCService from "../services/WebRTCServiceDropIn";
+import APIClient from "../services/APIClientService";
 import { dl } from "../utils/DateLog";
-import { RESTAPIEndpoint as baseURL } from "../configs/configs";
+import { handleError } from "../utils/ErrorLog";
+import { RESTAPIEndpoint } from "../configs/configs";
 import ScreenShare from "./ScreenShare";
-
-// use this for now (the useLocation when the final link is provided)
-const roomId = window.location.pathname.split("/")[2]; // "url.com/otter-room/<uuid>"
-const pc = new WebRTCService(roomId);
+import DataChannel from "./DataChannel";
 
 const Room = () => {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
   const [mic, setMic] = useState(true);
   const [vid, setVid] = useState(true);
-  //   const location = useLocation();
-  //   const roomId = location.search.split("=")[1];
-  //   const { current: pc } = useRef(new WebRTCService(roomId));
-  const navigate = useNavigate();
+  const location = useLocation();
+  const roomId = location.pathname.split("/")[2]; // "url.com/otter-room/<uuid>"
+  const apiRef = useRef(null);
+  const pcRef = useRef(null);
   const dataFetchedRef = useRef(false); // stops useEffect from running twice
   const mediaService = new MediaService();
 
   const startRemoteStream = () => {
     const remote = mediaService.initRemoteStream();
     setRemoteStream(remote);
-    pc.setRemoteStream(remote);
+    pcRef.current.setRemoteStream(remote);
   };
 
   const startLocalStream = async () => {
-    console.log("start Stream");
-    const local = await mediaService.getLocalStream();
-    pc.setLocalStreams(local);
-    pc.setupLocalMedia(); // add local tracks to peerConnection
-    setLocalStream(local);
+    let local;
+    try {
+      local = await mediaService.getLocalStream(); // wait for permissions
+    } catch (e) {
+      handleError(e);
+      alert(
+        "Please allow your video or camera! Check your permissions and refresh the page"
+      );
+    } finally {
+      if (local) {
+        pcRef.current.setLocalStreams(local);
+        pcRef.current.setupLocalMedia(); // add local tracks to peerConnection
+        setLocalStream(local);
+      }
+    }
   };
 
   const toggleMuteAudio = () => {
@@ -54,105 +61,80 @@ const Room = () => {
     setVid(!vid);
   };
 
-  const handleJoinOrCreateRoom = async () => {
-    try {
-      dl("inside handleJoinOrCreateRoom");
-      const response = await axios.post(`${baseURL}/createRoom`, {
-        uniqueName: roomId,
-      });
-      dl(response, response.data);
-      //   pc.joinOrCreateRoom(response.data.roomId);
-
-      //   if (!["closed", "full"].includes(response.data.status)) {
-      //     dl("joining or creating room");
-      //     connection.joinOrCreateRoom(response.data.roomId);
-      //   } else {
-      //     setErrorMessage(
-      //       `Sorry this room's status is ${response.data.status}.
-      //       Try entering another room! Redirecting you to the home page...`
-      //     );
-      //     setTimeout(() => {
-      //       navigate("/");
-      //     }, 1000 * 3);
-      //     return;
-      //   }
-    } catch (e) {
-      console.log(e);
-    }
+  const fetchCredentials = async () => {
+    const credentials = await apiRef.current.fetchCredentials();
+    pcRef.current.setConfiguration(credentials);
+    // dl("turn server set!");
   };
 
   useEffect(() => {
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
+    apiRef.current = new APIClient(RESTAPIEndpoint);
+    pcRef.current = new WebRTCService(roomId);
+    fetchCredentials();
     startRemoteStream();
     startLocalStream();
   }, []);
 
   return (
     <div>
-      {errorMessage.length > 0 ? (
-        <h1>{errorMessage}</h1>
-      ) : (
-        <>
-          <h2>{"Room: " + roomId}</h2>
-          <div id="videos">
-            <video
-              className="video-player"
-              id="local"
-              muted
-              autoPlay
-              playsInline
-              ref={(video) => {
-                if (video) {
-                  video.srcObject = localStream;
-                }
-              }}
-            />
-            <video
-              className="video-player"
-              id="remote"
-              autoPlay
-              // muted
-              playsInline
-              ref={(video) => {
-                if (video) {
-                  video.srcObject = remoteStream;
-                }
-              }}
-            />
-          </div>
+      <div id="videos">
+        <video
+          className="video-player"
+          id="local"
+          muted
+          autoPlay
+          playsInline
+          ref={(video) => {
+            if (video) {
+              video.srcObject = localStream;
+            }
+          }}
+        />
+        <video
+          className="video-player"
+          id="remote"
+          autoPlay
+          playsInline
+          ref={(video) => {
+            if (video) {
+              video.srcObject = remoteStream;
+            }
+          }}
+        />
+      </div>
 
-          <div id="controls">
-            <div
-              className="control-container"
-              id="camera-btn"
-              onClick={toggleMuteVideo}
-            >
-              <img
-                src={
-                  vid
-                    ? "https://super.so/icon/dark/video.svg"
-                    : "https://super.so/icon/dark/video-off.svg"
-                }
-              />
-            </div>
-            <div
-              className="control-container"
-              id="audio-btn"
-              onClick={toggleMuteAudio}
-            >
-              <img
-                src={
-                  mic
-                    ? "https://super.so/icon/dark/volume-2.svg"
-                    : "https://super.so/icon/dark/volume-x.svg"
-                }
-              />
-            </div>
-          </div>
-          {/* <ScreenShare pc={pc} mediaService={mediaService} /> */}
-        </>
-      )}
+      <div id="controls">
+        <div
+          className="control-container"
+          id="camera-btn"
+          onClick={toggleMuteVideo}
+        >
+          <img
+            src={
+              vid
+                ? "https://super.so/icon/dark/video.svg"
+                : "https://super.so/icon/dark/video-off.svg"
+            }
+          />
+        </div>
+        <div
+          className="control-container"
+          id="audio-btn"
+          onClick={toggleMuteAudio}
+        >
+          <img
+            src={
+              mic
+                ? "https://super.so/icon/dark/volume-2.svg"
+                : "https://super.so/icon/dark/volume-x.svg"
+            }
+          />
+        </div>
+      </div>
+      {/* <ScreenShare pc={pc} mediaService={mediaService} /> */}
+      <DataChannel connection={pcRef.current} />
     </div>
   );
 };
