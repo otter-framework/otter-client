@@ -73,9 +73,11 @@ const Room = () => {
     dataFetchedRef.current = true;
     apiRef.current = new APIClient(RESTAPIEndpoint, token);
     pcRef.current = new WebRTCService(roomId, token);
-    fetchCredentials();
-    startRemoteStream();
-    startLocalStream();
+    (async () => {
+      await fetchCredentials();
+      startRemoteStream();
+      startLocalStream();
+    })();
   }, []);
 
   return (
