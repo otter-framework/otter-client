@@ -1,15 +1,17 @@
 export const RTCConfig = {
-      iceServers: [
-        {
-          urls: [
-            "turn:otter-coturn-nlb-3ff199339ae812ca.elb.us-east-1.amazonaws.com:80",
-          ],
-          username: "1679341410-:-DefaultName",
-          credential: "9iNiJKJIpVC293f715Jf0+RdcMg=",
-        },
+  iceServers: [
+    {
+      urls: [
+        "turn:otter-coturn-nlb-77fc4f07ffb9968b.elb.us-east-1.amazonaws.com:80",
       ],
-      iceCandidatePoolSize: 10,
-    };
-    
-  export const WebSocketEndpoint = "wss://n0u3c6o30g.execute-api.us-east-1.amazonaws.com/dev";
-  export const RESTAPIEndpoint = "https://ckniny3ppb.execute-api.us-east-1.amazonaws.com/dev";
+      username: "1679341410-:-DefaultName",
+      credential: "9iNiJKJIpVC293f715Jf0+RdcMg=",
+    },
+  ],
+  iceCandidatePoolSize: 10,
+};
+
+export const WebSocketEndpoint =
+  "unsafe:wss://750gfq0nl5.execute-api.us-east-1.amazonaws.com/dev";
+export const RESTAPIEndpoint =
+  "https://nb4jhgw855.execute-api.us-east-1.amazonaws.com/dev";

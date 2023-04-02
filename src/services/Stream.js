@@ -3,7 +3,6 @@ import { errorLogger } from "../utilities/logger";
 class Stream {
   constructor(peerConnection) {
     this.peerConnection = peerConnection;
-    this.audioAndVideoStream = null;
     this.localTracks = { audio: null, video: null, screenShare: null };
     this.remoteTracks = { audio: null, video: null, screenShare: null };
     this.updateLocalMediaTracks = null;
@@ -13,7 +12,6 @@ class Stream {
 
   addLocalTracks(mediaStream) {
     const tracks = mediaStream.getTracks();
-    this.audioAndVideoStream = mediaStream;
     tracks.forEach((track) => {
       this.peerConnection.addTrack(track, mediaStream);
       this.localTracks[track.kind] = track;
@@ -45,26 +43,19 @@ class Stream {
     const trackToAdd = mediaStream.getTracks()[0];
     const trackToRemove = this.localTracks[trackToAdd.kind];
 
-    // This only works if no negotiation is needed
-    try {
-      const rtpSender = this.getRTPSenderBy(trackToRemove);
-      await rtpSender.replaceTrack(trackToAdd);
-      trackToRemove.stop();
-    } catch (error) {
-      errorLogger(error);
-    } finally {
-      this.localTracks[trackToAdd.kind] = trackToAdd;
-    }
+    // // This only "works" (i.e., not really) if no negotiation is needed
+    // try {
+    //   const rtpSender = this.getRTPSenderBy(trackToRemove);
+    //   await rtpSender.replaceTrack(trackToAdd);
+    //   trackToRemove.stop();
+    // } catch (error) {
+    //   errorLogger(error);
+    // } finally {
+    //   this.localTracks[trackToAdd.kind] = trackToAdd;
+    // }
 
     // How do we handle removing a track?
     // Do we want to add the new track first ... wait X seconds ... then remove the first track?
-    // audioVideoStream.addTrack(trackToAdd);
-    // audioVideoStream.removeTrack(trackToRemove);
-
-    // console.log(this.peerConnection.getTransceivers());
-    // this.peerConnection.addTrack(trackToAdd, audioVideoStream);
-    // console.log(this.peerConnection.getTransceivers());
-    // this.peerConnection.removeTrack(RTCRtpSender);
   }
 
   muteAudio() {
@@ -83,18 +74,21 @@ class Stream {
 
   // Event handler when we receive a track from the peer
   handleOnTrack(trackEvent) {
-    const { streams, track } = trackEvent;
-    const nbOfTracks = streams[0].getTracks().length;
-    if (nbOfTracks === 2) {
+    const { track } = trackEvent;
+    if (["audio", "video"].includes(track.kind)) {
       this.addRemoteTracks(track);
     } else {
       this.addRemoteScreenShare(track);
     }
+    // this.setMediaStreamTrackEventHandlers(track, "remote");
   }
 
   // Event handlers for a MediaStreamTrack
   // Not sure if these are relevant for our purpose
-  handleEnded(_, localOrRemote) {}
+  handleEnded(event, localOrRemote) {
+    console.log("Ended");
+    console.log(event);
+  }
 
   handleMute(_, localOrRemote) {
     // What do we do when the media can't be displayed anymore

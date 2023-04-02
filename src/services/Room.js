@@ -46,7 +46,7 @@ class Room {
   getRoomIdFromURL() {
     const pathArr = window.location.pathname.split("/");
     const roomId = pathArr[2]; // only works if the path follows the format "/otter-meet/<Room UUID/..."
-    return "rm_ffcffc94-0a98-4e53-b5fc-825bed8c07ca"; // this needs to be removed - only for testing purposes
+    return "rm_e657cdaf-3a3f-4528-8d26-3f0c0da79346"; // this needs to be removed - only for testing purposes
     return roomId;
   }
 

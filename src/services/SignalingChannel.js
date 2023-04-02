@@ -8,7 +8,6 @@ class SignalingChannel {
   sendMessage(data) {
     const message = { action: "sendmessage", message: data };
     const stringifiedMessage = JSON.stringify(message);
-    console.log("Sending message", message);
     this.ws.send(stringifiedMessage);
   }
 
@@ -31,7 +30,6 @@ class SignalingChannel {
 
   async handleConnectionMessage(messageEvent) {
     const message = JSON.parse(messageEvent.data);
-    console.log("new message", message);
     await this.processSignalingMessage(message);
   }
 

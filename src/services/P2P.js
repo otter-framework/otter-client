@@ -35,14 +35,17 @@ class P2P {
 
   handleIceCandidate(iceEvent) {
     const { candidate } = iceEvent;
+    // console.log("Candidate", candidate);
     // Null candidate indicates the end of ICE
-    if (candidate === null) return;
+    if (candidate !== null) {
+      this.iceCandidatesToSend.push(candidate);
+    }
 
-    this.iceCandidatesToSend.push(candidate);
-
-    if (candidate === "" || this.readyToSendIceCandidates()) {
+    if (candidate === null || this.readyToSendIceCandidates()) {
       this.sendSignalingMessage(
-        this.buildMessageStructure({ candidates: this.iceCandidatesToSend })
+        this.buildMessageStructure({
+          candidates: [...this.iceCandidatesToSend],
+        })
       );
       this.resetIceCandidatesToSend();
       return;
@@ -51,7 +54,9 @@ class P2P {
 
   handleIceCandidateError(iceErrorEvent) {
     console.log("IceErrorEvent", iceErrorEvent);
-    this.restartIce();
+    console.log(this);
+    // Why are we getting this error
+    // this.restartIce();
   }
 
   handleIceConnectionStateChange(event) {
@@ -128,10 +133,6 @@ class P2P {
     this.setDestinationId(destination);
     this.setAssignedRole(isMyPeerPolite);
 
-    // When the first message is received, the source can be:
-    // The $connect Lambda in which case you are the first peer to connect (i.e., impolite peer)
-    // From the other peer in which case you are the second peer to connect (i.e., polite peer)
-
     // The first peer starts the offer once it can
     if (!this.amIPolite && !payload) {
       this.peerConnection.dispatchEvent(new Event("negotiationneeded"));
@@ -186,18 +187,16 @@ class P2P {
   }
 
   async startIceProcess() {
-    this.iceCandidatesReceived.forEach(async (candidate, idx) => {
+    for (let i = 0; i < nbOfCandidates; i++) {
+      const candidate = this.iceCandidatesReceived.shift();
       try {
         await this.peerConnection.addIceCandidate(candidate);
-        if (idx === this.iceCandidatesReceived.length) {
-          this.resetIceCandidatesReceived();
-        }
       } catch (error) {
         if (!this.ignoreOffer) {
           throw error;
         }
       }
-    });
+    }
   }
 
   setSourceId(sourceId) {
