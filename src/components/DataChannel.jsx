@@ -5,7 +5,7 @@ const END_OF_FILE_MESSAGE = "EOF";
 let file;
 
 const DataChannel = ({ connection }) => {
-  const [readyToSendMessages, setReadyToSendMessages] = useState(false);
+  const [readyToSendMessages, setReadyToSendMessages] = useState(true);
   const [messages, setMessages] = useState([]); // list of objects with form {text, sender, date}
   const [localMessages, setLocalMessages] = useState([]);
   const [remoteMessages, setRemoteMessages] = useState([]);
@@ -138,61 +138,121 @@ const DataChannel = ({ connection }) => {
   }, [localMessages, remoteMessages]);
 
   return (
-    <div>
-      <div>
-        {messages.map((msg, idx) => {
-          return (
-            <li key={idx} style={{ listStyle: "none" }}>
-              {msg.sender} @ {msg.time.toLocaleTimeString()}:{" "}
-              <strong>{msg.text}</strong>
-            </li>
-          );
-        })}
-      </div>
-      {readyToSendMessages ? (
+    <div className="grid grid-rows-6 grid-cols-3 gap-2 h-full">
+      <div className="row-span-5 col-span-3 h-5/6">
+        <p>messages:</p>
         <div>
-          <label>Text message:</label>
-          <input value={currentMessage} onChange={handleMessageChange} />
-          <button onClick={handleSendMessage}>Send</button>
+          {messages.map((msg, idx) => {
+            return (
+              <li key={idx} style={{ listStyle: "none" }}>
+                {msg.sender} @ {msg.time.toLocaleTimeString()}:{" "}
+                <strong>{msg.text}</strong>
+              </li>
+            );
+          })}
         </div>
-      ) : null}
-      <div>
-        {showShareFile ? (
-          <button
-            id="share-file-button"
-            onClick={handleShareFileButtonClick}
-            disabled={connection && connection.peerConnectionId === null}
-          >
-            <i>Click to Share a file</i>
-          </button>
-        ) : (
-          <div id="select-file-dialog">
-            <div id="dialog-content">
-              <div id="select-file">
-                <div id="label">Select a file:</div>
-                <input
-                  type="file"
-                  id="select-file-input"
-                  onChange={handleFileInputChange}
-                />
-              </div>
-              <div id="dialog-footer">
+      </div>
+      <div className="row-span-1 col-span-3 h-1/6">
+        {readyToSendMessages ? (
+          <div>
+            <label>Text message:</label>
+            <input value={currentMessage} onChange={handleMessageChange} />
+            <button onClick={handleSendMessage}>Send</button>
+            <div>
+              {showShareFile ? (
                 <button
-                  id="ok-button"
-                  disabled={okButtonDisable}
-                  onClick={handleOkClick}
+                  id="share-file-button"
+                  onClick={handleShareFileButtonClick}
+                  // disabled={connection && connection.peerConnectionId === null}
                 >
-                  Ok
+                  <i>Click to Share a file</i>
                 </button>
-                <button id="cancel-button" onClick={handleCancelClick}>
-                  Cancel
-                </button>
-              </div>
+              ) : (
+                <div id="select-file-dialog">
+                  <div id="dialog-content">
+                    <div id="select-file">
+                      <div id="label">Select a file:</div>
+                      <input
+                        type="file"
+                        id="select-file-input"
+                        onChange={handleFileInputChange}
+                      />
+                    </div>
+                    <div id="dialog-footer">
+                      <button
+                        id="ok-button"
+                        disabled={okButtonDisable}
+                        onClick={handleOkClick}
+                      >
+                        Ok
+                      </button>
+                      <button id="cancel-button" onClick={handleCancelClick}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
+    // <div>
+    //   <div>
+    //     {messages.map((msg, idx) => {
+    //       return (
+    //         <li key={idx} style={{ listStyle: "none" }}>
+    //           {msg.sender} @ {msg.time.toLocaleTimeString()}:{" "}
+    //           <strong>{msg.text}</strong>
+    //         </li>
+    //       );
+    //     })}
+    //   </div>
+    //   {readyToSendMessages ? (
+    //     <div>
+    //       <label>Text message:</label>
+    //       <input value={currentMessage} onChange={handleMessageChange} />
+    //       <button onClick={handleSendMessage}>Send</button>
+    //     </div>
+    //   ) : null}
+    //   <div>
+    //     {showShareFile ? (
+    //       <button
+    //         id="share-file-button"
+    //         onClick={handleShareFileButtonClick}
+    //         disabled={connection && connection.peerConnectionId === null}
+    //       >
+    //         <i>Click to Share a file</i>
+    //       </button>
+    //     ) : (
+    //       <div id="select-file-dialog">
+    //         <div id="dialog-content">
+    //           <div id="select-file">
+    //             <div id="label">Select a file:</div>
+    //             <input
+    //               type="file"
+    //               id="select-file-input"
+    //               onChange={handleFileInputChange}
+    //             />
+    //           </div>
+    //           <div id="dialog-footer">
+    //             <button
+    //               id="ok-button"
+    //               disabled={okButtonDisable}
+    //               onClick={handleOkClick}
+    //             >
+    //               Ok
+    //             </button>
+    //             <button id="cancel-button" onClick={handleCancelClick}>
+    //               Cancel
+    //             </button>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     )}
+    //   </div>
+    // </div>
   );
 };
 

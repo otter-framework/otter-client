@@ -1,4 +1,4 @@
-#root {
+/* #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
@@ -46,21 +46,15 @@ div {
   grid-template-columns: 1fr 1fr;
   gap: 2em;
   /* height: 100vh; */
-  /* overflow: hidden; */
-}
-
-#local {
-}
-
-#remote {
-}
+/* overflow: hidden; */
+/* } */
 
 /* .screen-share {
   height: 100vh;
   width: auto;
 } */
 
-.smallFrame {
+/* .smallFrame {
   position: fixed;
   top: 20px;
   left: 20px;
@@ -100,4 +94,4 @@ div {
 .control-container img {
   height: 30px;
   width: 30px;
-}
+} */

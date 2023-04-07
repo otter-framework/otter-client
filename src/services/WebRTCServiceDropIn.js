@@ -34,14 +34,14 @@ class WebRTCService {
   }
 
   setConfiguration(credentials) {
-    const currentConfig = RTCConfig.iceServers[0];
-    RTCConfig.iceServers = [
-      {
-        ...currentConfig,
-        ...credentials,
-      },
-    ];
-    this.pc.setConfiguration(RTCConfig);
+    // const currentConfig = RTCConfig.iceServers[0];
+    // RTCConfig.iceServers = [
+    //   {
+    //     ...currentConfig,
+    //     ...credentials,
+    //   },
+    // ];
+    // this.pc.setConfiguration(RTCConfig);
     this.setIsTurnReady();
   }
 

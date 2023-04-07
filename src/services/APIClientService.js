@@ -8,32 +8,36 @@ class APIClient {
     this.token = queryToken;
   }
 
-  async fetchRoomInfo(roomId) {
-    try {
-      const response = await axios.get(
-        `${this.endpoint}/room/${roomId}?token=${this.token}`
-      );
-      return response.data;
-    } catch (error) {
-      const statusCode = error.response.status;
-      if ([400, 404].includes(statusCode)) {
-        return null;
-      } else if ([500].includes(statusCode)) {
-        // We need to try again
-        // We need to validate the room id before we can start the session
-      } else {
-        // How do we deal with unexpected errors
-        handleError(error);
-      }
-    }
-  }
+  // async fetchRoomInfo(roomId) {
+  //   try {
+  //     const response = await axios.get(
+  //       `${this.endpoint}/room/${roomId}?token=${this.token}`
+  //     );
+  //     return response.data;
+  //   } catch (error) {
+  //     const statusCode = error.response.status;
+  //     if ([400, 404].includes(statusCode)) {
+  //       return null;
+  //     } else if ([500].includes(statusCode)) {
+  //       // We need to try again
+  //       // We need to validate the room id before we can start the session
+  //     } else {
+  //       // How do we deal with unexpected errors
+  //       handleError(error);
+  //     }
+  //   }
+  // }
 
   async fetchCredentials() {
     try {
-      const response = await axios.get(
-        `${this.endpoint}/credentials?token=${this.token}`
-      );
-      return response.data;
+      // const response = await axios.get(
+      //   `${this.endpoint}/credentials?token=${this.token}`
+      // );
+      // return response.data;
+      return {
+        username: "1680961659-:-randomUserId",
+        password: "w41WfpNEp+rH6wrXm5k9afE9ayc=",
+      };
     } catch (error) {
       const statusCode = error.response.status;
       if ([500].includes(statusCode)) {
