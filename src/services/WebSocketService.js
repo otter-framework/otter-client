@@ -21,6 +21,7 @@ class WebSocketService {
   }
 
   setMessageHandler(func) {
+    dl("inside setMessageHandler");
     this.messageHandler = func;
     this.websocket.onmessage = this.onMessage.bind(this);
   }

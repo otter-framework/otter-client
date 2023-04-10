@@ -2,7 +2,10 @@
 export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    minWidth: {
+      message: "300px",
+    },
     extend: {},
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/forms")],
 };

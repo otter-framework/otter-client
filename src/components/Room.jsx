@@ -8,12 +8,13 @@ import { handleError } from "../utils/ErrorLog";
 import { RESTAPIEndpoint } from "../configs/configs";
 import ScreenShare from "./ScreenShare";
 import DataChannel from "./DataChannel";
+import Controls from "./Controls";
 
-const Room = () => {
+const Room = ({ toaster }) => {
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [mic, setMic] = useState(true);
-  const [vid, setVid] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [peerConnected, setPeerConnected] = useState(false);
   const location = useLocation();
   const roomId = location.pathname.split("/")[2]; // "url.com/otter-room/<uuid>"
   const token = location.search.split("=")[1];
@@ -22,10 +23,13 @@ const Room = () => {
   const dataFetchedRef = useRef(false); // stops useEffect from running twice
   const mediaService = new MediaService();
 
+  const notify = (msg, options) => toaster(msg, options);
+
   const startRemoteStream = () => {
     const remote = mediaService.initRemoteStream(); // new MediaStream
     setRemoteStream(remote);
     pcRef.current.setRemoteStream(remote);
+    pcRef.current.setPeerConnectedHandler(setPeerConnected);
   };
 
   const startLocalStream = async () => {
@@ -46,26 +50,10 @@ const Room = () => {
     }
   };
 
-  const toggleMuteAudio = () => {
-    localStream &&
-      localStream.getAudioTracks().forEach((track) => {
-        track.enabled = !track.enabled;
-      });
-    setMic(!mic);
-  };
-
-  const toggleMuteVideo = () => {
-    localStream &&
-      localStream.getVideoTracks().forEach((track) => {
-        track.enabled = !track.enabled;
-      });
-    setVid(!vid);
-  };
-
   const fetchCredentials = async () => {
     const credentials = await apiRef.current.fetchCredentials();
     pcRef.current.setConfiguration(credentials);
-    // dl("turn server set!");
+    dl("turn server set!");
   };
 
   useEffect(() => {
@@ -73,6 +61,7 @@ const Room = () => {
     dataFetchedRef.current = true;
     apiRef.current = new APIClient(RESTAPIEndpoint, token);
     pcRef.current = new WebRTCService(roomId, token);
+    pcRef.current.setToaster(notify);
     (async () => {
       await fetchCredentials();
       startRemoteStream();
@@ -81,71 +70,65 @@ const Room = () => {
   }, []);
 
   return (
-    <div className="container mx-auto">
-      <div className="grid grid-rows-4 grid-cols-4 gap-4">
-        <div className="col-span-3 row-span-1">empty</div>
-        <div className="col-span-1 row-span-1 place-self-center">
-          <video
-            className="video-player"
-            id="local"
-            muted
-            autoPlay
-            playsInline
-            ref={(video) => {
-              if (video) {
-                video.srcObject = localStream;
-              }
-            }}
-          />
+    <div className="flex flex-wrap gap-4 w-full h-screen items-center relative overflow-hidden z-0 md:flex-nowrap md:flex-row flex-col place-content-center">
+      <div
+        className={
+          "w-full place-self-center relative max-h-[85%] md:w-8/12" +
+          (peerConnected ? "" : " hidden")
+        }
+      >
+        <video
+          autoPlay
+          playsInline
+          className="w-full h-full"
+          ref={(video) => {
+            if (video) {
+              video.srcObject = remoteStream;
+            }
+          }}
+        />
+      </div>
+      <div
+        className={`place-self-center ${
+          peerConnected ? "w-4/12" : "w-full"
+        } relative max-h-full bg-cover bg-transparent transition-all ease-in-out duration-300 delay-75`}
+      >
+        <p className="absolute left-4 bottom-2 text-white [text-shadow:_1px_1px_5px_rgb(0_0_0_/_90%)]">
+          You
+        </p>
+        <video
+          className="w-full h-full"
+          muted
+          autoPlay
+          playsInline
+          ref={(video) => {
+            if (video) {
+              video.srcObject = localStream;
+            }
+          }}
+        />
+      </div>
+
+      {/* Data Channel */}
+      <div
+        className={`${
+          chatOpen ? "xl:w-96" : "xl:w-0"
+        } overflow-hidden transition-all ease-in-out duration-300 h-full ${
+          chatOpen ? "-translate-x-[26rem]" : ""
+        } absolute -right-[26rem] w-[26rem] xl:relative xl:translate-x-0 xl:right-0`}
+      >
+        <div className="flex h-full w-full">
+          <DataChannel connection={pcRef.current} />
         </div>
-        <div className="row-span-3 col-span-3 place-self-center relative">
-          <video
-            className="video-player"
-            id="remote"
-            autoPlay
-            playsInline
-            poster="placeholder.png"
-            ref={(video) => {
-              if (video) {
-                video.srcObject = remoteStream;
-              }
-            }}
-          />
-          <div className="absolute bottom-0 w-full">
-            <div className="grid grid-rows-1 grid-cols-2 gap-8 justify-items-center">
-              <div
-                className="inline-block col-span-1 py-2 place-self-end"
-                id="audio-btn"
-                onClick={toggleMuteAudio}
-              >
-                <img
-                  src={
-                    mic
-                      ? "https://super.so/icon/light/volume-2.svg"
-                      : "https://super.so/icon/light/volume-x.svg"
-                  }
-                />
-              </div>
-              <div
-                className="inline-block col-span-1 py-2 place-self-start"
-                onClick={toggleMuteVideo}
-              >
-                <img
-                  src={
-                    vid
-                      ? "https://super.so/icon/light/video.svg"
-                      : "https://super.so/icon/light/video-off.svg"
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="row-span-3 col-span-1">
-          <div className="container mx-auto h-full">
-            <DataChannel connection={pcRef.current} />
-          </div>
-        </div>
+      </div>
+
+      {/* Control Panel */}
+      <div className="grid absolute bottom-16 w-full">
+        <Controls
+          localStream={localStream}
+          chatOpen={chatOpen}
+          setChatOpen={setChatOpen}
+        />
       </div>
     </div>
 

@@ -24,6 +24,10 @@ class DataChannel {
     this.readyToSendMessages(true);
   }
 
+  handlePeerLeave() {
+    this.readyToSendMessages(false);
+  }
+
   handleDataChannelMessage(messageEvent) {
     const { data } = messageEvent;
     console.log(messageEvent);

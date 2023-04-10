@@ -23,25 +23,36 @@ class WebRTCService {
     this.isSettingRemoteAnswerPending = false;
     this.mediaConnections = {}; // id: MediaStream
     this.isTurnReady = false;
+    this.setPeerConnected = null;
+    this.toaster = null;
+  }
+
+  setPeerConnectedHandler(func) {
+    this.setPeerConnected = func;
+  }
+
+  setToaster(func) {
+    this.toaster = func;
   }
 
   async signalingChannelDataHandler(data) {
-    // dl("data inside signal handler", data);
+    dl("data inside signal handler", data);
     this.setSessionInfo(data);
+    dl("session info set");
     if (data.payload) {
       await this.processPayload(data.payload);
     }
   }
 
   setConfiguration(credentials) {
-    // const currentConfig = RTCConfig.iceServers[0];
-    // RTCConfig.iceServers = [
-    //   {
-    //     ...currentConfig,
-    //     ...credentials,
-    //   },
-    // ];
-    // this.pc.setConfiguration(RTCConfig);
+    const currentConfig = RTCConfig.iceServers[0];
+    RTCConfig.iceServers = [
+      {
+        ...currentConfig,
+        ...credentials,
+      },
+    ];
+    this.pc.setConfiguration(RTCConfig);
     this.setIsTurnReady();
   }
 
@@ -57,17 +68,23 @@ class WebRTCService {
     this.peerConnectionId = source;
 
     if (source === null) {
+      // Disconnect?
       this.mediaConnections = {};
       this.polite = null;
+      this.setPeerConnected(false);
+      this.dataChannel.handlePeerLeave();
+      this.toaster("Remote peer disconnected.", { icon: "🫥" });
       return;
     }
 
     this.connectionId = destination; // flip source and destination
     this.polite = !polite;
-
+    dl(!payload, this.polite);
     if (!payload && this.polite === false) {
+      dl("negotiationneeded");
       const event = new Event("negotiationneeded");
       this.pc.dispatchEvent(event);
+      dl("dispatched the event");
     }
 
     if (this.peerConnectionId && this.candidatesToSend.length) {
@@ -247,6 +264,7 @@ class WebRTCService {
     let id = event.streams[0].id;
     if (keys.length === 0) {
       this.mediaConnections[id] = this.remoteStream;
+      this.toaster("Remote peer connected.", { icon: "👋" });
     } else if (keys.length > 0 && !keys.includes(id)) {
       // TODO: disable my screen share button
       this.mediaConnections[id] = this.remoteScreen;
@@ -254,6 +272,8 @@ class WebRTCService {
     event.streams[0].getTracks().forEach((track) => {
       this.mediaConnections[id].addTrack(track);
     });
+    this.setPeerConnected(true);
+    this.dataChannel.handleDataChannelOpen();
   }
 
   handleError(error) {

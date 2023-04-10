@@ -2,8 +2,8 @@ class MediaService {
   async getLocalStream() {
     const local = await navigator.mediaDevices.getUserMedia({
       video: {
-        width: { min: 640, ideal: 1920 },
-        height: { min: 480, ideal: 1080 },
+        width: { min: 640, max: 1920 },
+        height: { min: 480, max: 1440 },
       },
       audio: {
         noiseSuppression: true,
