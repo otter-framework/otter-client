@@ -4,7 +4,7 @@ export const RTCConfig = {
       urls: [
         // "turn:otter-coturn-nlb-21fdb672c4414a84.elb.us-east-2.amazonaws.com:80",
         // "turn:otter-coturn-nlb-2fdceaf3f1b7d475.elb.us-east-2.amazonaws.com:80",
-        "turn:otter-coturn-nlb-af4f7b50992ed5cc.elb.us-east-2.amazonaws.com:80",
+        "turn:otter-coturn-nlb-d556b286cd0960cd.elb.us-east-2.amazonaws.com:80",
         // "stun:stun.l.google.com:19302",
       ],
       username: null, //"1679349186-:-DefaultName", //"otter",
@@ -19,10 +19,10 @@ export const WebSocketEndpoint =
   // "wss://eoevuwoy1c.execute-api.us-east-2.amazonaws.com/dev";
   // "wss://6a7c4fbrni.execute-api.us-east-2.amazonaws.com/dev";
   // "wss://ek8xp7flkg.execute-api.us-east-2.amazonaws.com/dev";
-  "wss://3dg5q744kh.execute-api.us-east-2.amazonaws.com/dev";
+  "wss://ouxl64a591.execute-api.us-east-2.amazonaws.com/dev";
 
 export const RESTAPIEndpoint =
   // "https://qpbc772eia.execute-api.us-east-2.amazonaws.com/dev";
   // "https://3y29hytrel.execute-api.us-east-2.amazonaws.com/dev";
   // "https://154bolq0tc.execute-api.us-east-2.amazonaws.com/dev";
-  "https://vq5rmob7x0.execute-api.us-east-2.amazonaws.com/v1";
+  "https://a0h0ru5eb3.execute-api.us-east-2.amazonaws.com/v1";

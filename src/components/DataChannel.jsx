@@ -236,43 +236,6 @@ const DataChannel = ({ connection }) => {
               />
             </svg>
           </label>
-
-          {/* <div>
-              {showShareFile ? (
-                <button
-                  id="share-file-button"
-                  onClick={handleShareFileButtonClick}
-                  // disabled={connection && connection.peerConnectionId === null}
-                >
-                  <i>Click to Share a file</i>
-                </button>
-              ) : (
-                <div id="select-file-dialog">
-                  <div id="dialog-content">
-                    <div id="select-file">
-                      <div id="label">Select a file:</div>
-                      <input
-                        type="file"
-                        id="select-file-input"
-                        onChange={handleFileInputChange}
-                      />
-                    </div>
-                    <div id="dialog-footer">
-                      <button
-                        id="ok-button"
-                        disabled={okButtonDisable}
-                        onClick={handleOkClick}
-                      >
-                        Ok
-                      </button>
-                      <button id="cancel-button" onClick={handleCancelClick}>
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div> */}
         </div>
       </div>
     </div>
