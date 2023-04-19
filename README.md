@@ -5,8 +5,8 @@
 ### Features 
 - audio/video calling
 - mute/unmute media streams
-- file sharing
 - instant messaging
+- file sharing
 
 ## Screenshots
 
