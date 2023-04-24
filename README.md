@@ -28,7 +28,7 @@
 ### Otter Fin display page after a call is terminated.
 <img width="1431" alt="Screenshot 2023-04-15 at 2 22 19 PM" src="https://user-images.githubusercontent.com/37469965/232253695-5e4a60ec-2fa0-4ef7-9db1-24f462aa31a0.png">
 
-### To Install
+### How To Install
 
 run `npm i` then `npm run dev`
 
